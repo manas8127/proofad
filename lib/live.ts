@@ -24,40 +24,49 @@ export async function validateReferenceImage(value: File): Promise<ReferenceImag
   return { bytes, mimeType: value.type, originalName: value.name || "reference-image" };
 }
 
-function requireLiveApproval() {
-  if (process.env.PROOFAD_LIVE_APPROVED !== "true") throw new Error("Live generation is disabled. Set PROOFAD_LIVE_APPROVED=true only after approving the run budget.");
+function requireGeminiKey() {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY is not configured on the server.");
   return key;
 }
 
-function partData(part: Record<string, unknown>) {
-  const inline = (part.inlineData ?? part.inline_data) as { data?: string; mimeType?: string; mime_type?: string } | undefined;
-  if (!inline?.data) return null;
-  return { bytes: Buffer.from(inline.data, "base64"), mimeType: inline.mimeType ?? inline.mime_type ?? "image/png" };
-}
+type InteractionContent = { type?: string; text?: string; data?: string; mime_type?: string };
+type InteractionResponse = {
+  error?: { message?: string };
+  status?: string;
+  steps?: Array<{ type?: string; content?: InteractionContent[] }>;
+};
 
-async function geminiRequest(model: string, body: unknown) {
-  const apiKey = requireLiveApproval();
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+async function interactionRequest(body: unknown) {
+  const apiKey = requireGeminiKey();
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
     method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": apiKey }, body: JSON.stringify(body),
   });
-  const payload = await response.json() as { error?: { message?: string }; candidates?: Array<{ content?: { parts?: Array<Record<string, unknown>> } }> };
-  if (!response.ok) throw new Error(`Gemini ${model} failed: ${payload.error?.message ?? response.statusText}`);
+  const payload = await response.json() as InteractionResponse;
+  if (!response.ok || payload.status === "failed" || payload.status === "incomplete") {
+    throw new Error(`Gemini request failed: ${payload.error?.message ?? payload.status ?? response.statusText}`);
+  }
   return payload;
 }
 
+function outputContent(payload: InteractionResponse) {
+  return payload.steps?.flatMap((step) => step.type === "model_output" ? step.content ?? [] : []) ?? [];
+}
+
 export async function generateWithGemini(brief: Brief, reference: ReferenceImage) {
-  const payload = await geminiRequest("gemini-3.1-flash-image", {
-    contents: [{ parts: [
-      { text: compilePrompt(brief) },
-      { inline_data: { mime_type: reference.mimeType, data: reference.bytes.toString("base64") } },
-    ] }],
-    generationConfig: { responseModalities: ["IMAGE"], responseFormat: { image: { aspectRatio: "1:1", imageSize: "1K" } } },
+  const payload = await interactionRequest({
+    model: "gemini-3.1-flash-image",
+    input: [
+      { type: "image", mime_type: reference.mimeType, data: reference.bytes.toString("base64") },
+      { type: "text", text: compilePrompt(brief) },
+    ],
+    response_format: { type: "image", mime_type: "image/png", aspect_ratio: "1:1", image_size: "1K" },
+    generation_config: { thinking_level: "minimal" },
+    store: false,
   });
-  const parts = payload.candidates?.flatMap((candidate) => candidate.content?.parts ?? []) ?? [];
-  const image = parts.map(partData).find((part) => part !== null);
-  if (!image) throw new Error("Gemini returned no image artifact.");
+  const imagePart = outputContent(payload).find((part) => part.type === "image" && part.data);
+  if (!imagePart?.data) throw new Error("Gemini returned no image artifact.");
+  const image = { bytes: Buffer.from(imagePart.data, "base64"), mimeType: imagePart.mime_type ?? "image/png" };
   const metadata = await sharp(image.bytes).metadata();
   if (!metadata.width || !metadata.height) throw new Error("Generated image could not be decoded.");
   if (Math.max(metadata.width, metadata.height) > 1024) throw new Error(`Generated image exceeds the 1K limit (${metadata.width} × ${metadata.height}).`);
@@ -98,12 +107,30 @@ async function evaluateVisual(brief: Brief, reference: ReferenceImage, image: { 
     `Product: ${brief.productName}. Geography: ${brief.geography}. Season: ${brief.season}.`,
     "Return JSON only with productPresence, productFidelity, and context. Each needs status (pass, fail, or unknown), observation, and evidence. Use unknown when the image does not support a reliable judgement.",
   ].join(" ");
-  const payload = await geminiRequest("gemini-3.1-flash-lite", { contents: [{ parts: [
-    { text: instruction },
-    { inline_data: { mime_type: reference.mimeType, data: reference.bytes.toString("base64") } },
-    { inline_data: { mime_type: image.mimeType, data: image.bytes.toString("base64") } },
-  ] }], generationConfig: { responseMimeType: "application/json" } });
-  const text = payload.candidates?.flatMap((candidate) => candidate.content?.parts ?? []).map((part) => typeof part.text === "string" ? part.text : "").join("\n") ?? "";
+  const findingSchema = {
+    type: "object", properties: {
+      status: { type: "string", enum: ["pass", "fail", "unknown"] },
+      observation: { type: "string" }, evidence: { type: "string" },
+    }, required: ["status", "observation", "evidence"],
+  };
+  const payload = await interactionRequest({
+    model: "gemini-3.1-flash-lite",
+    input: [
+      { type: "image", mime_type: reference.mimeType, data: reference.bytes.toString("base64") },
+      { type: "image", mime_type: image.mimeType, data: image.bytes.toString("base64") },
+      { type: "text", text: instruction },
+    ],
+    response_format: {
+      type: "text", mime_type: "application/json", schema: {
+        type: "object", properties: {
+          productPresence: findingSchema, productFidelity: findingSchema, context: findingSchema,
+        }, required: ["productPresence", "productFidelity", "context"],
+      },
+    },
+    generation_config: { thinking_level: "minimal" },
+    store: false,
+  });
+  const text = outputContent(payload).filter((part) => part.type === "text").map((part) => part.text ?? "").join("\n");
   try {
     const parsed = JSON.parse(text) as VisualEvidence;
     for (const key of ["productPresence", "productFidelity", "context"] as const) {

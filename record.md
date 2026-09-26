@@ -131,7 +131,7 @@ The product, product fidelity, context, and image-validity checks pass. The requ
 
 ## Live-run boundary
 
-The implemented live endpoint is `POST /api/live/inspect`. It accepts a real PNG/JPEG/WebP reference product image and the same campaign contract, requests square 1K generation, rejects returned images above 1024 pixels, runs local OCR and structured visual checks, and stores the artifact/report. It remains disabled until `GEMINI_API_KEY` and `PROOFAD_LIVE_APPROVED=true` are configured locally.
+The implemented live endpoint is `POST /api/live/inspect`. It accepts a real PNG/JPEG/WebP reference product image and the same campaign contract, requests square 1K generation, rejects returned images above 1024 pixels, runs local OCR and structured visual checks, and stores the artifact/report. A single UI run requires only server-side `GEMINI_API_KEY`; the separate 20-output benchmark remains protected by `PROOFAD_LIVE_APPROVED=true`.
 
 The benchmark command is:
 

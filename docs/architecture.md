@@ -4,7 +4,7 @@
 
 Phase A is a local Next.js evaluation workbench. It proves the campaign contract, evidence schema, dependency policy, human-label surface, persistence model, and recovery behavior with deterministic fixtures. Optional Ollama output is supplementary local evidence only. It does not alter the official verdict.
 
-Live work is explicitly gated by `PROOFAD_LIVE_APPROVED=true` and a server-side `GEMINI_API_KEY`. The live endpoint accepts a reference image, requests square 1K generation, rejects output above the 1024px limit, uses local OCR and one structured visual-evidence call, and writes the image plus report atomically enough to preserve an auditable result.
+The 20-output benchmark is explicitly gated by `PROOFAD_LIVE_APPROVED=true`. A single UI inspection requires a server-side `GEMINI_API_KEY`. The live endpoint accepts a reference image, requests square 1K generation, rejects output above the 1024px limit, uses local OCR and one structured visual-evidence call, and writes the image plus report atomically enough to preserve an auditable result.
 
 ## Current data flow
 

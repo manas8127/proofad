@@ -187,7 +187,8 @@ npm run build
 
 The workspace stays fixture-first while also exposing a clear **Generate & evaluate image** action. It requires a PNG, JPEG, or WebP reference image (maximum 10 MB), preserves it only for the active generation request, and keeps the API key outside the browser bundle. The same capability remains available through the server-only multipart endpoint.
 
-1. Copy `.env.example` to `.env.local`, set `GEMINI_API_KEY`, then set `PROOFAD_LIVE_APPROVED=true` for the approved run only.
+1. Copy `.env.example` to `.env.local` and set `GEMINI_API_KEY`. The key is read only by the server route; it is never sent to the browser.
+2. A single inspection in the UI uses that key. Set `PROOFAD_LIVE_APPROVED=true` only before running the separate 20-output benchmark command.
 2. Start `npm run dev`.
 3. Send the brief and reference image:
 
@@ -201,7 +202,7 @@ curl -X POST http://localhost:3000/api/live/inspect \
   -F "strategy=structured"
 ```
 
-The live route sends the reference image and compiled brief to `gemini-3.1-flash-image` with square `1K` output requested. It rejects a returned artifact with a longest edge over 1024 pixels. It then runs local Tesseract OCR and one structured visual evaluation using `gemini-3.1-flash-lite`, producing separate Product, Context, Text, and Technical checks. A missing or low-confidence OCR signal becomes `REVIEW`; a failed mandatory check becomes `FAIL`.
+The live route sends the reference image and compiled brief to the current Gemini Interactions API using `gemini-3.1-flash-image`, requesting square `1K` output. It rejects a returned artifact with a longest edge over 1024 pixels. It then runs local Tesseract OCR and one structured visual evaluation using `gemini-3.1-flash-lite`, producing separate Product, Context, Text, and Technical checks. A missing or low-confidence OCR signal becomes `REVIEW`; a failed mandatory check becomes `FAIL`.
 
 ### Generate the required 20-output benchmark
 
