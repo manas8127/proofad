@@ -360,6 +360,19 @@ ProofAd adapts evaluation ideas rather than claiming that a paper’s benchmark 
 
 In practice, the combined approach is: **ask inspectable questions (TIFA), make them atomic and dependency-aware (DSG), validate model judgments against people rather than treating them as proof (LLM-as-a-Judge), and probe known failure behaviors deliberately (CheckList).** Full notes and the evidence-to-design mapping are in [docs/research.md](docs/research.md).
 
+### What the research changes in this product
+
+The papers do not decorate the README; each one changes a concrete design choice:
+
+| Research lesson | Product behavior |
+| --- | --- |
+| A criterion should describe one observable fact. | Product presence and product fidelity are distinct checks. |
+| A child fact cannot pass when its parent is absent. | A missing product blocks its attribute checks from receiving credit. |
+| An evaluator is a hypothesis, not an authority. | Automated findings are compared with blinded human labels before reliability is reported. |
+| Average scores hide safety-relevant mistakes. | Wrong copy, wrong product, wrong context, uncertainty, and incomplete work are retained as explicit tests. |
+
+The research basis also tells us where to be careful: OCR may misread text; visual evidence may confuse a similar product; a model judge may sound confident while being wrong; and fixtures do not stand in for live evaluation. The detailed argument and the known boundaries are in [docs/research.md](docs/research.md) and [docs/limitations.md](docs/limitations.md).
+
 ### Evaluation plan for the live phase
 
 The live evaluation is designed before turning on a provider:
@@ -462,6 +475,7 @@ Read the companion documentation for the detailed design and presentation record
 - [docs/design.md](docs/design.md) — desktop flow, narrow preview, interaction states, and demo narrative.
 - [docs/pipeline.md](docs/pipeline.md) — browser-independent REST pipeline and MCP tools.
 - [docs/research.md](docs/research.md) — research mapping and evaluation methodology.
+- [docs/limitations.md](docs/limitations.md) — plain-language system boundaries and the work required to close them.
 - [docs/demo.md](docs/demo.md) — concise demo sequence and claims to avoid.
 - [docs/agent-use.md](docs/agent-use.md) — coding-agent transparency and the human directions supplied to the agent.
 - [docs/decisions.md](docs/decisions.md) — scoped technical decisions, including why Kubernetes and SquashFS are not build priorities.
