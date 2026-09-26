@@ -185,7 +185,7 @@ npm run build
 
 ### Run a live reference-image inspection
 
-The primary workspace deliberately stays fixture-first. When the live budget is approved, use the server-only multipart endpoint. It requires a PNG, JPEG, or WebP reference image (maximum 10 MB), preserves it only for the active generation request, and keeps the API key outside the browser bundle.
+The workspace stays fixture-first while also exposing a clear **Generate & evaluate image** action. It requires a PNG, JPEG, or WebP reference image (maximum 10 MB), preserves it only for the active generation request, and keeps the API key outside the browser bundle. The same capability remains available through the server-only multipart endpoint.
 
 1. Copy `.env.example` to `.env.local`, set `GEMINI_API_KEY`, then set `PROOFAD_LIVE_APPROVED=true` for the approved run only.
 2. Start `npm run dev`.

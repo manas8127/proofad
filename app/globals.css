@@ -41,6 +41,7 @@ input:focus, select:focus, button:focus-visible, a:focus-visible, summary:focus-
 .strategy { max-width: 270px; }
 .form-footer { align-items: center; display: flex; gap: 14px; margin-top: 24px; }
 .form-footer span { color: var(--muted); font-size: .82rem; }
+.field-hint { color: var(--muted); font-size: .82rem; margin: 10px 0 0; }
 button, .run-actions a { background: var(--accent); border: 1px solid var(--accent); border-radius: 7px; color: white; cursor: pointer; font: inherit; font-weight: 700; padding: 10px 14px; text-decoration: none; }
 button:disabled { cursor: wait; opacity: .6; }
 button.secondary, .run-actions a { background: transparent; color: var(--accent); }
