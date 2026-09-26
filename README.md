@@ -9,6 +9,7 @@ This repository currently implements **Phase A: local, fixture-backed developmen
 - Ten deterministic local test runs (eight core, two optional) exercise the complete UI, persistence, inspection, recovery, and verdict paths.
 - The visible `Presentation Run` creates a new local fixture record during a demo. It is never represented as a live model run.
 - Gemini integration is implemented as a locked server-side boundary. It makes **zero calls** until an explicit budget approval and server-side configuration.
+- An optional local-only Ollama `qwen3-vl:4b` text check can be used during Phase A demos. It is labelled as local test/demo evidence and never changes the official fixture verdict or substitutes for the required Gemini workflow.
 - Fixture results test application integration only. They are not a Gemini dataset and do not demonstrate semantic accuracy.
 
 ## Run locally
