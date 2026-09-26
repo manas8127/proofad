@@ -65,6 +65,13 @@ export function createCustomFixtureRun(input: Brief): Run {
   record(run, "Submitted", "completed", "Custom fixture run created locally with idempotency protection.");
   return run;
 }
+export function saveLiveRun(run: Run) {
+  const parsed = runSchema.parse(run);
+  database().prepare("INSERT INTO runs (id, kind, fixture_id, idempotency_key, payload, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(parsed.id, parsed.kind, null, null, JSON.stringify(parsed), parsed.createdAt);
+  record(parsed, "Submitted", "completed", "Live generation request, artifact, and evaluation were persisted.");
+  return parsed;
+}
 export function retryVerification(id: string): Run {
   const source = findRun(id);
   if (!source) throw new Error("Run not found");

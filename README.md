@@ -4,7 +4,7 @@
 
 The project is deliberately designed as a useful product: an inspectable evaluation policy, recoverable local run state, and an interface that makes important distinctions visible. It does **not** present an attractive image or a model explanation as proof that an ad is correct.
 
-> Current status: **Phase A is fully local and fixture-backed.** The evaluation contract, evidence records, dependency policy, human-annotation surface, and behavioral cases are the work under test. Image/vision models are deliberately replaceable evidence sources; Gemini remains locked and optional Ollama can never change an official verdict.
+> Current status: local fixtures remain the safe default. A separate server-only live route accepts a reference image, generates a 1K creative, runs OCR plus structured visual evaluation, and persists the resulting evidence. It is disabled until an explicit budget approval and server-side key are supplied.
 
 ## Start here
 
@@ -183,6 +183,36 @@ npm run build
 
 `npm test` exercises the deterministic verdict policy, including failure precedence, review handling, operational errors, and the rule that a product attribute cannot pass when the product itself is absent. `npm run build` verifies the production Next.js bundle.
 
+### Run a live reference-image inspection
+
+The primary workspace deliberately stays fixture-first. When the live budget is approved, use the server-only multipart endpoint. It requires a PNG, JPEG, or WebP reference image (maximum 10 MB), preserves it only for the active generation request, and keeps the API key outside the browser bundle.
+
+1. Copy `.env.example` to `.env.local`, set `GEMINI_API_KEY`, then set `PROOFAD_LIVE_APPROVED=true` for the approved run only.
+2. Start `npm run dev`.
+3. Send the brief and reference image:
+
+```bash
+curl -X POST http://localhost:3000/api/live/inspect \
+  -F "referenceImage=@./reference-product.png" \
+  -F "productName=Northstar Sparkling Water" \
+  -F "geography=Bengaluru, India" \
+  -F "season=Monsoon" \
+  -F "requiredCopy=SAVE 20% THIS WEEKEND" \
+  -F "strategy=structured"
+```
+
+The live route sends the reference image and compiled brief to `gemini-3.1-flash-image` with square `1K` output requested. It rejects a returned artifact with a longest edge over 1024 pixels. It then runs local Tesseract OCR and one structured visual evaluation using `gemini-3.1-flash-lite`, producing separate Product, Context, Text, and Technical checks. A missing or low-confidence OCR signal becomes `REVIEW`; a failed mandatory check becomes `FAIL`.
+
+### Generate the required 20-output benchmark
+
+The benchmark is exactly two reference products × five campaign briefs × two prompt strategies. It performs twenty sequential live generations and evaluations, preserving each run and image artifact. It does not generate hidden extra candidates.
+
+```bash
+npm run benchmark:live -- --product-a ./product-a.png --product-a-name "Product A" --product-b ./product-b.png --product-b-name "Product B"
+```
+
+Run this only after confirming the provider quota and the 20-generation budget. The console prints the persisted run ID, verdict, and elapsed time for each job; `/evaluation` is then used for blinded human labels.
+
 ## A 60-second demonstration
 
 1. Start at `/app`, enter a brief, and select **Run evaluation**.
@@ -267,12 +297,12 @@ Use this sequence when reviewing the live app or this repository:
 
 The strongest question to ask is: **“What evidence would make this verdict change?”** ProofAd exposes that answer per criterion and preserves it in the run history.
 
-| Evaluation component | Phase A implementation | Later live-work boundary |
+| Evaluation component | Local fixture path | Live reference-image path |
 | --- | --- | --- |
-| Evidence source | `FixtureProvider` returns labelled local assets and predictable evidence. | One approved image source per live run; the specific generator is not the evaluation claim. |
-| Evidence collection | Fixture records flow through the same contracts and policy; optional Ollama reads only bundled fixture images. | Independent OCR plus one structured visual-evaluation call. |
-| Run state | SQLite transactions, event records, attempt IDs, artifact hashes, and persisted checkpoints. | Same state model, with provider request metadata and bounded retry policy. |
-| User interface | One Next.js workspace, run history, download links, and evaluation screen. | Same UI, with live-provider status surfaced honestly. |
+| Evidence source | Labelled local assets and predictable evidence. | `gemini-3.1-flash-image` receives the supplied product reference and frozen brief. |
+| Evidence collection | Fixture records flow through the same contracts and policy; optional Ollama reads only bundled fixture images. | Independent local OCR plus one structured `gemini-3.1-flash-lite` visual-evaluation call. |
+| Run state | SQLite transactions, event records, attempt IDs, artifact hashes, and persisted checkpoints. | Same state model, with provider/evaluator metadata and saved image bytes. |
+| User interface | One Next.js workspace, run history, download links, and evaluation screen. | A server-only multipart API keeps credentials and raw reference upload out of the browser bundle. |
 
 ### Recoverability and honest failure handling
 
@@ -343,7 +373,7 @@ All built-in cases are visibly labelled `SIMULATED / TEST FIXTURE`. They validat
 | 9 | Oversized returned image (optional) | Validates input/artifact limits. |
 | 10 | Recovered interrupted run (optional) | Demonstrates restart/checkpoint recovery. |
 
-The separate Presentation Run is retained next to this library after it completes. In Phase A it is a newly persisted fixture record; in approved Phase B it will instead have an explicit allocation for exactly one new live generation and one visual-evaluation call. Its purpose is to demonstrate the evaluator’s state trail and decision—not to showcase a generator.
+The separate Presentation Run is retained next to this library after it completes. It remains a visibly labelled fixture demonstration; `POST /api/live/inspect` is the distinct route for an actual reference-image generation and evaluation run.
 
 ## Research basis
 
@@ -371,7 +401,7 @@ The papers do not decorate the README; each one changes a concrete design choice
 
 The detailed research argument is in [docs/research.md](docs/research.md). Test and implementation work is tracked as GitHub issues rather than maintained as a second checklist in this README.
 
-### Evaluation plan for the live phase
+### Evaluation plan for live runs
 
 The live evaluation is designed before turning on a provider:
 
@@ -443,9 +473,9 @@ Then ask a simple question. Exit with `/bye`. If PowerShell cannot find `ollama`
 
 Model size, runtime speed, and GPU/CPU placement vary by quantization and machine. Confirm the downloaded size with `ollama list` and watch local resource use while running a smoke check. The ProofAd request restricts the local call to bundled `/fixtures/` images, resizes the input before the request, uses a short response budget, and does not upload the image to a cloud model. Do not use this optional feature with sensitive assets until you have reviewed your local device and organization policies.
 
-## Phase B: evidence-source approval gate
+## Live evidence-source approval gate
 
-Gemini is intentionally **locked** in Phase A because live evidence collection must be budgeted and measurable. Before enabling a live source, review a dry-run manifest that separately lists:
+Live evidence collection is implemented but disabled by default because it must be budgeted and measurable. Before enabling it, review a manifest that separately lists:
 
 | Allocation | Provider activity |
 | --- | --- |

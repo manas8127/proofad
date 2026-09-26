@@ -40,4 +40,4 @@ The server supports initialize, notifications/initialized, tools/list, and tools
 
 ## Safety boundary
 
-Phase A pipeline calls are local and deterministic. They do not make a provider call. The optional local vision check is separate evidence and cannot change the official verdict. A future live evidence source must remain behind the approved call budget and produce the same run/report structure.
+The standard pipeline calls are local and deterministic. They do not make a provider call. The separate `POST /api/live/inspect` route accepts a reference image and a campaign brief, is explicitly budget-gated, and produces the same persisted run/report structure after 1K generation, OCR, and structured visual evaluation.

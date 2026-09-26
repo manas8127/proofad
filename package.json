@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
-    "seed": "node --experimental-strip-types scripts/seed-fixtures.ts"
+    "seed": "node --experimental-strip-types scripts/seed-fixtures.ts",
+    "benchmark:live": "node --experimental-strip-types scripts/run-live-benchmark.ts"
   },
   "dependencies": {
     "@types/node": "^24.0.0",

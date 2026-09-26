@@ -4,7 +4,7 @@
 
 Phase A is a local Next.js evaluation workbench. It proves the campaign contract, evidence schema, dependency policy, human-label surface, persistence model, and recovery behavior with deterministic fixtures. Optional Ollama output is supplementary local evidence only. It does not alter the official verdict.
 
-Gemini provider classes are deliberately locked in this phase. No live request is made until the approved Phase B call budget, model IDs, and credentials are explicitly supplied.
+Live work is explicitly gated by `PROOFAD_LIVE_APPROVED=true` and a server-side `GEMINI_API_KEY`. The live endpoint accepts a reference image, requests square 1K generation, rejects output above the 1024px limit, uses local OCR and one structured visual-evidence call, and writes the image plus report atomically enough to preserve an auditable result.
 
 ## Current data flow
 
@@ -16,7 +16,7 @@ flowchart TD
     D --> E{Evidence source}
     E --> F[FixtureProvider]
     E --> G[Optional Ollama offer reader]
-    E --> H[Locked GeminiProvider]
+    E --> H[Live reference-image provider]
     F --> I[PNG artifact + immutable hashes]
     G --> J[Local evidence label]
     H --> I
@@ -51,7 +51,7 @@ stateDiagram-v2
 
 State changes are committed as events with run ID, attempt ID, stage, timestamp, status, and artifact references. Artifact persistence precedes its completed checkpoint. This allows the interface to reopen a run after refresh and retain an image when a later check cannot finish.
 
-The local idempotency key prevents duplicate submissions within this application. It cannot prove exactly-once execution by a future remote image provider: a network timeout may occur after the provider received or completed a request. Phase B must therefore classify ambiguous completion as unknown rather than automatically submit another billable request.
+The local idempotency key prevents duplicate submissions within this application. It cannot prove exactly-once execution by the remote image provider: a network timeout may occur after the provider received or completed a request. The live route therefore does not retry an ambiguous generation automatically.
 
 ## Verdict policy
 

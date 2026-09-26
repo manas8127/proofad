@@ -24,6 +24,7 @@ export const runSchema = z.object({
   status: z.enum(["completed", "interrupted", "error"]), verdict: verdictSchema,
   createdAt: z.string(), elapsedMs: z.number(), imageUrl: z.string(), imageHash: z.string(),
   brief: briefSchema, prompt: z.string(), checks: z.array(checkSchema), note: z.string(),
+  provider: z.string().optional(), referenceImageHash: z.string().optional(), evaluatorModel: z.string().optional(),
 });
 export type Run = z.infer<typeof runSchema>;
 

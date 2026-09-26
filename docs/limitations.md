@@ -6,7 +6,7 @@ ProofAd records limits plainly. A limitation is not a hidden defect or a marketi
 
 | Limitation | Why it matters | Completion evidence |
 | --- | --- | --- |
-| Live provider is locked | Phase A cannot measure live image-generation or visual-evaluation behavior. | A capped, logged provider run saves model IDs, request counts, timings, returned artifact bytes, and structured findings. |
+| Live provider requires an explicit budget gate | No live image-generation or visual-evaluation measurement exists until a real run is authorized. | The server-only route saves model IDs, timings, returned artifact bytes, and structured findings. |
 | Evaluator has no human-calibrated result yet | A deterministic policy can be correct while the observations feeding it are wrong. | Blinded labels on a held-out set; report false approvals, false rejections, review coverage, and sample size. |
 | OCR and visual observations are fixture-backed | Fixture evidence verifies flow, not text recognition or visual grounding on live images. | Independent OCR and structured visual observations run on retained live artifacts, with error cases preserved. |
 | Exact product identity is not yet measured | Product presence and product fidelity are harder than generic scene relevance. | Reference-versus-output identity protocol, labels, and measured errors. |
