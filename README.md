@@ -371,7 +371,7 @@ The papers do not decorate the README; each one changes a concrete design choice
 | An evaluator is a hypothesis, not an authority. | Automated findings are compared with blinded human labels before reliability is reported. |
 | Average scores hide safety-relevant mistakes. | Wrong copy, wrong product, wrong context, uncertainty, and incomplete work are retained as explicit tests. |
 
-The research basis also tells us where to be careful: OCR may misread text; visual evidence may confuse a similar product; a model judge may sound confident while being wrong; and fixtures do not stand in for live evaluation. The detailed argument and the known boundaries are in [docs/research.md](docs/research.md) and [docs/limitations.md](docs/limitations.md).
+The detailed research argument is in [docs/research.md](docs/research.md). Test and implementation work is tracked as GitHub issues rather than maintained as a second checklist in this README.
 
 ### Evaluation plan for the live phase
 
@@ -475,17 +475,9 @@ Read the companion documentation for the detailed design and presentation record
 - [docs/design.md](docs/design.md) — desktop flow, narrow preview, interaction states, and demo narrative.
 - [docs/pipeline.md](docs/pipeline.md) — browser-independent REST pipeline and MCP tools.
 - [docs/research.md](docs/research.md) — research mapping and evaluation methodology.
-- [docs/limitations.md](docs/limitations.md) — plain-language system boundaries and the work required to close them.
 - [docs/demo.md](docs/demo.md) — concise demo sequence and claims to avoid.
 - [docs/agent-use.md](docs/agent-use.md) — coding-agent transparency and the human directions supplied to the agent.
 - [docs/decisions.md](docs/decisions.md) — scoped technical decisions, including why Kubernetes and SquashFS are not build priorities.
-
-## Trust boundaries
-
-- A result always says whether it came from a local fixture, a local observation, or an approved live source.
-- A model observation is evidence, not authority. The saved contract and deterministic policy produce the verdict.
-- REVIEW and ERROR remain visible states. The system does not turn incomplete or uncertain evidence into approval.
-- Measured results are reported with their sample, labels, model/source version, and observed timings. Unmeasured claims are left out.
 
 ## License
 
