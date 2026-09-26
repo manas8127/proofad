@@ -98,25 +98,72 @@ npm run build
 
 ## Architecture
 
-### Current local-first execution path
+### Evaluation architecture
 
 ```mermaid
 flowchart LR
-    A[Reference product + campaign fields] --> B[Frozen campaign contract]
-    B --> C[Evaluation plan<br/>atomic criteria + dependencies]
-    C --> D{Evidence source}
-    D --> E[Local fixture]
-    D --> F[Optional local vision check]
-    D --> G[Approved live provider]
-    E --> H[SQLite run + event log<br/>PNG/report artifacts]
-    F --> H
-    G --> H
-    H --> I[Evidence records<br/>Product / Context / Text / Operational]
-    I --> J[Dependency-aware<br/>deterministic policy]
-    J --> K[PASS / FAIL / REVIEW / ERROR<br/>Desktop + phone previews]
+    Brief[Campaign brief<br/>product · geography · season · exact copy]
+    Contract[Frozen evaluation contract<br/>atomic requirements + dependencies]
+    Brief --> Contract
+
+    subgraph Acquire["Acquire reproducible evidence"]
+      Asset[Creative artifact<br/>fixture now · approved live source later]
+      OCR[Independent OCR<br/>literal-copy observation]
+      Vision[Structured visual observation<br/>product + context]
+      Asset --> OCR
+      Asset --> Vision
+    end
+
+    Contract --> Asset
+    Contract --> OCR
+    Contract --> Vision
+
+    subgraph Decide["Decide conservatively"]
+      Findings[Criterion-level evidence<br/>Product · Context · Text · Operational]
+      Policy[Dependency-aware policy]
+      Verdict{Verdict}
+      Findings --> Policy --> Verdict
+    end
+
+    OCR --> Findings
+    Vision --> Findings
+    Contract --> Findings
+    Verdict --> Pass[PASS<br/>all mandatory criteria pass]
+    Verdict --> Fail[FAIL<br/>a mandatory criterion fails]
+    Verdict --> Review[REVIEW<br/>mandatory evidence is uncertain]
+    Verdict --> Error[ERROR<br/>inspection is incomplete or invalid]
+
+    Audit[(SQLite event log<br/>artifacts · hashes · attempts · report)]
+    Asset --> Audit
+    Findings --> Audit
+    Verdict --> Audit
 ```
 
-The **campaign contract** is the durable source of truth: reference product, geography, season, required literal copy, prompt strategy, and provider/version metadata are saved with each run. The inspector records evidence against that contract rather than asking an evaluator for one opaque overall score.
+The **campaign contract** is the durable source of truth: reference product, geography, season, required literal copy, prompt strategy, and provider/version metadata are saved with each run. The inspector records evidence against that contract rather than asking an evaluator for one opaque overall score. The model is deliberately outside the decision authority: it can contribute an observation, but only the evidence policy can create a verdict.
+
+### User and judge flow
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant App as ProofAd workspace
+    participant Store as SQLite event log
+    participant Eval as Evidence + policy
+    participant Human as Blinded annotator
+
+    User->>App: Enter campaign brief
+    App->>Store: Save frozen contract + idempotency key
+    App->>Eval: Collect criterion-level evidence
+    Eval->>Store: Save artifact, findings, hashes, timings
+    Eval->>App: PASS / FAIL / REVIEW / ERROR with reasons
+    App->>User: Desktop report + phone-size preview
+    User->>App: Export report or retry verification
+    App->>Store: Preserve event trail; never overwrite evidence
+    Human->>App: Label product/context/text blind to automated verdict
+    App->>Eval: Compare human labels with automated findings
+```
+
+The demo follows this exact flow. A presentation run is new and persisted, a fixture is visibly labelled, and the report makes it possible to explain *why* a case passed, failed, or needs review.
 
 | Evaluation component | Phase A implementation | Later live-work boundary |
 | --- | --- | --- |
@@ -220,6 +267,25 @@ The hackathon evaluation is designed before turning on a provider:
 - Keep constructed negative fixtures separate from natural model outputs.
 
 This is an experimental design, not a promise of production-scale accuracy. The app will report observed timings and outcomes only after the approved runs exist.
+
+### Calibration loop
+
+```mermaid
+flowchart TD
+    Outputs[Held-out live outputs<br/>and controlled failure fixtures] --> Blind[Blind human labels<br/>product · context · text]
+    Outputs --> Auto[Automated criterion findings]
+    Blind --> Compare[Compare per criterion]
+    Auto --> Compare
+    Compare --> Metrics[False approvals · false rejections<br/>review coverage · latency]
+    Metrics --> Diagnose{What failed?}
+    Diagnose -->|criterion or dependency design| Contract[Revise evaluation contract]
+    Diagnose -->|evidence collection| Evidence[Revise OCR / visual-evidence method]
+    Diagnose -->|insufficient data| More[Collect and label more held-out outputs]
+    Contract --> Outputs
+    Evidence --> Outputs
+```
+
+The loop evaluates the evaluator. It does not tune claims around a model’s best-looking outputs.
 
 ## Optional appendix: local Ollama evidence source
 

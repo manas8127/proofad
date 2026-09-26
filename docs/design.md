@@ -10,6 +10,19 @@ The interface uses labelled controls, explicit stage/state labels, requirement-t
 
 `fixture brief → frozen contract + prompt → persisted image record → OCR/visual evidence schema → dependency validation → deterministic verdict → report`
 
+```mermaid
+flowchart LR
+    Create[Create<br/>enter campaign requirements] --> Inspect[Inspect<br/>read criterion-level evidence]
+    Inspect --> Decide{Verdict}
+    Decide -->|PASS| Export[Export report]
+    Decide -->|FAIL| Explain[Show failed requirement + evidence]
+    Decide -->|REVIEW| Escalate[Request human review]
+    Decide -->|ERROR| Recover[Retry failed verification only]
+    Explain --> Export
+    Escalate --> Export
+    Recover --> Inspect
+```
+
 SQLite retains run payloads, stage events, and annotations. Fixture records are idempotent by fixture ID; a presentation run receives a fresh generated ID and is saved independently. An interrupted result is never automatically promoted to approval.
 
 ## Verdict policy

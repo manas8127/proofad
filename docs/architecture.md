@@ -31,8 +31,22 @@ The campaign contract and the saved report carry the strategy/evidence-source me
 
 ## Event state and recovery
 
-```text
-Submitted -> BriefReady -> ImageSaved -> ChecksCompleted -> Completed
+```mermaid
+stateDiagram-v2
+    [*] --> Submitted
+    Submitted --> BriefReady: contract persisted
+    BriefReady --> ImageSaved: artifact validated + saved
+    ImageSaved --> ChecksCompleted: all required findings recorded
+    ChecksCompleted --> Completed: verdict + report persisted
+
+    BriefReady --> Error: invalid credentials / quota / source failure
+    ImageSaved --> Review: mandatory evidence uncertain
+    ImageSaved --> Error: corrupt or incomplete inspection
+    ChecksCompleted --> Review: unknown mandatory criterion
+
+    Error --> BriefReady: retry only failed stage
+    Review --> ChecksCompleted: evidence completed
+    Completed --> [*]
 ```
 
 State changes are committed as events with run ID, attempt ID, stage, timestamp, status, and artifact references. Artifact persistence precedes its completed checkpoint. This allows the interface to reopen a run after refresh and retain an image when a later check cannot finish.
@@ -40,6 +54,16 @@ State changes are committed as events with run ID, attempt ID, stage, timestamp,
 The local idempotency key prevents duplicate submissions within this application. It cannot prove exactly-once execution by a future remote image provider: a network timeout may occur after the provider received or completed a request. Phase B must therefore classify ambiguous completion as unknown rather than automatically submit another billable request.
 
 ## Verdict policy
+
+```mermaid
+flowchart TD
+    Start[All required criterion findings present?] -->|No: corrupt or operationally invalid| Error[ERROR]
+    Start -->|Yes| Failure{Any mandatory failure?}
+    Failure -->|Yes| Fail[FAIL]
+    Failure -->|No| Unknown{Any mandatory unknown?}
+    Unknown -->|Yes| Review[REVIEW]
+    Unknown -->|No| Pass[PASS]
+```
 
 1. A failed mandatory check produces `FAIL`.
 2. Missing or uncertain mandatory evidence produces `REVIEW`.
