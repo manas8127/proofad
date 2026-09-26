@@ -6,6 +6,30 @@ The project is deliberately designed as a useful product: an inspectable evaluat
 
 > Current status: **Phase A is fully local and fixture-backed.** The evaluation contract, evidence records, dependency policy, human-annotation surface, and behavioral cases are the work under test. Image/vision models are deliberately replaceable evidence sources; Gemini remains locked and optional Ollama can never change an official verdict.
 
+## Start here
+
+ProofAd is intentionally small in surface area and strict in behavior:
+
+| If you need to… | Start here | What you get |
+| --- | --- | --- |
+| See the product in action | [http://localhost:3000/demo](http://localhost:3000/demo) | A guided failure case, a narrow preview, and a fresh local run. |
+| Evaluate a brief in a browser | [http://localhost:3000/app](http://localhost:3000/app) | A frozen contract, visible findings, retry, export, and run history. |
+| Label and measure results | [http://localhost:3000/evaluation](http://localhost:3000/evaluation) | Human annotation kept separate from automated findings. |
+| Call it from software | [Pipeline and MCP](#use-the-evaluation-pipeline-without-a-browser) | JSON endpoints and MCP tools using the same persisted decision path. |
+
+The central operating rule is simple: **make the requirement visible, make the evidence visible, and never hide uncertainty.**
+
+## Contents
+
+- [The problem and the response](#the-problem-and-the-response)
+- [Quick start](#quick-start)
+- [Use the evaluation pipeline without a browser](#use-the-evaluation-pipeline-without-a-browser)
+- [Architecture](#architecture)
+- [Inspection and verdict policy](#inspection-and-verdict-policy)
+- [Test-run library](#test-run-library)
+- [Research basis](#research-basis)
+- [Trust boundaries](#trust-boundaries)
+
 ## The problem and the response
 
 Generative creatives fail in ways that a single aesthetic score can hide: the offer can be wrong, a product can be substituted, or evidence can be incomplete. **ProofAd’s contribution is a decision system for catching, explaining, and measuring those failures.**
@@ -78,7 +102,7 @@ The first local interaction creates `data/proofad.sqlite`. This SQLite database 
 
 ### Use the evaluation pipeline without a browser
 
-The workspace is optional. The same persisted evaluation pipeline is available through REST and MCP:
+The workspace is optional. The same persisted evaluation pipeline is available through REST and MCP. Both routes use the same brief validation, idempotency key, stored run record, findings, dependency handling, verdict policy, and JSON report. There is no second “API-only” decision path to drift from the user-facing product.
 
 | Interface | Entry point | Use it when |
 | --- | --- | --- |
@@ -95,6 +119,59 @@ curl -X POST http://localhost:3000/api/pipeline/inspect \
 ```
 
 This returns the same frozen contract, checks, evidence, verdict, and report-ready run record the workspace uses. A repeated identical request reopens the existing local run. See [docs/pipeline.md](docs/pipeline.md) for all REST endpoints and MCP tools.
+
+#### REST request and response contract
+
+Every inspection request must provide five fields:
+
+| Field | Meaning | Rules |
+| --- | --- | --- |
+| `productName` | Identity of the reference product. | 2–80 characters. |
+| `geography` | The intended campaign location. | 2–80 characters. |
+| `season` | The intended seasonal or contextual setting. | 2–40 characters. |
+| `requiredCopy` | Literal text that must be present. | 1–160 characters; treated as exact copy. |
+| `strategy` | Retained prompt strategy label. | `baseline` or `structured`. |
+
+The response is intentionally complete, so a calling tool does not need to infer a verdict from a prose message:
+
+```json
+{
+  "verdict": "PASS",
+  "summary": "PASS: 5 pass, 0 fail, 0 unknown, 0 error.",
+  "run": {
+    "id": "custom-…",
+    "brief": { "productName": "Northstar Sparkling Water" },
+    "checks": [{ "id": "required-copy", "status": "pass" }],
+    "imageHash": "…",
+    "note": "Local simulation created from your brief. No image model call was made."
+  }
+}
+```
+
+Use `GET /api/pipeline/runs` to retrieve summaries and `GET /api/pipeline/runs/{runId}` to retrieve a prior result. Use `GET /api/runs/{runId}/report` when a portable JSON report is needed.
+
+#### Connect an MCP client
+
+Start ProofAd locally, then configure a Streamable HTTP MCP client with the endpoint below. Client configuration files vary, so treat this as the essential connection information rather than a copy-paste configuration for every host:
+
+```json
+{
+  "mcpServers": {
+    "proofad": {
+      "url": "http://localhost:3000/api/mcp"
+    }
+  }
+}
+```
+
+After initialization, the client can discover four tools:
+
+1. `proofad.inspect_campaign` — creates or reopens an inspection from the five-field brief.
+2. `proofad.get_run` — reads one saved run by ID.
+3. `proofad.list_runs` — lists saved runs and their summaries.
+4. `proofad.get_metrics` — reads fixture and annotation summary metrics.
+
+Tool calls return readable text and structured JSON. This allows an agent to route a result by verdict, link to a report, or ask for human review without scraping the browser.
 
 ### Verify the implementation
 
@@ -287,7 +364,7 @@ In practice, the combined approach is: **ask inspectable questions (TIFA), make 
 
 The live evaluation is designed before turning on a provider:
 
-- Generate roughly 20 real outputs during the official hacking window: two products, five briefs per product, and baseline versus structured prompts.
+- Generate roughly 20 real outputs during the approved live-work window: two products, five briefs per product, and baseline versus structured prompts.
 - Keep eight examples for development and twelve held out, splitting by whole brief to avoid training on one version and testing a near-duplicate.
 - Have a person label each product/context/text criterion before examining the evaluator’s decision.
 - Report false approvals, false rejections, review coverage, per-stage latency, and exact sample counts—not a vague accuracy claim.
