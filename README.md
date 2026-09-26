@@ -1,10 +1,10 @@
 # ProofAd
 
-**ProofAd is a local-first inspection workflow for display-ad creative.** It turns a campaign brief into an explicit, evidence-backed decision: does the creative show the intended product, fit the required context, render the literal offer, and complete all required checks?
+**ProofAd is an evaluation system for display-ad creative.** It turns a campaign brief into an explicit, evidence-backed decision: does the creative show the intended product, fit the required context, render the literal offer, and complete all required checks?
 
 The project is deliberately designed for an AI engineering hackathon: it demonstrates a useful product experience, an inspectable evaluation policy, and recoverable local run state. It does **not** present an attractive image or a model explanation as proof that an ad is correct.
 
-> Current status: **Phase A is fully local and fixture-backed.** Gemini is represented by a locked provider boundary and makes zero calls. Optional Ollama inspection is local demo evidence only; it cannot change an official fixture verdict or replace the required Gemini workflow.
+> Current status: **Phase A is fully local and fixture-backed.** The evaluation contract, evidence records, dependency policy, human-annotation surface, and behavioral cases are the work under test. Image/vision models are deliberately replaceable evidence sources; Gemini remains locked and optional Ollama can never change an official verdict.
 
 ## What a user can do today
 
@@ -15,7 +15,7 @@ The project is deliberately designed for an AI engineering hackathon: it demonst
 - Read separated Product, Context, Text, and Operational evidence before accepting the final verdict.
 - Download the immutable report and creative artifact, retry verification without creating another generation, and recover saved runs after a refresh or restart.
 - Use `/evaluation` to collect blinded human annotations and view the resulting measurement surface.
-- Optionally ask a local `qwen3-vl:4b` Ollama model to read a fixture offer. The response is clearly marked as local test/demo evidence.
+- Optionally ask a local `qwen3-vl:4b` Ollama model to read a fixture offer. This is an interchangeable evidence-source smoke check, not the project’s contribution.
 
 ## Quick start
 
@@ -69,7 +69,7 @@ npm run build
 2. Show the supplied brief and retained prompt strategy, then open the phone preview. The phone frame is a presentation aid for narrow-screen legibility, not a claim of native mobile-app or advertising-platform compatibility.
 3. Reveal the individual Product, Context, and Text findings. The mandatory text mismatch drives `FAIL`; a high aesthetic impression cannot compensate for it.
 4. Click **Presentation Run**. Phase A creates a new `PRESENTATION RUN / LOCAL SIMULATION` record and displays stage status and elapsed time. It never pretends a stored fixture is a live model call.
-5. Finish on `/evaluation`: explain that human labels, controlled failures, and held-out real outputs are needed before claiming evaluator accuracy.
+5. Finish on `/evaluation`: explain that the system is evaluated against human labels, controlled behavioral failures, and held-out real outputs—not by which model generated the image.
 
 ## Architecture
 
@@ -78,24 +78,25 @@ npm run build
 ```mermaid
 flowchart LR
     A[Reference product + campaign fields] --> B[Frozen campaign contract]
-    B --> C{Selected provider mode}
-    C --> D[FixtureProvider<br/>local deterministic creative]
-    C --> E[OllamaProvider<br/>optional local offer read]
-    C --> F[GeminiProvider<br/>locked in Phase A]
-    D --> G[SQLite run + event log<br/>PNG/report artifacts]
-    E --> G
-    F --> G
-    G --> H[Evidence records<br/>Product / Context / Text / Operational]
-    H --> I[Dependency-aware<br/>deterministic policy]
-    I --> J[PASS / FAIL / REVIEW / ERROR<br/>Desktop + phone previews]
+    B --> C[Evaluation plan<br/>atomic criteria + dependencies]
+    C --> D{Evidence source}
+    D --> E[Local fixture]
+    D --> F[Optional local vision check]
+    D --> G[Approved live provider]
+    E --> H[SQLite run + event log<br/>PNG/report artifacts]
+    F --> H
+    G --> H
+    H --> I[Evidence records<br/>Product / Context / Text / Operational]
+    I --> J[Dependency-aware<br/>deterministic policy]
+    J --> K[PASS / FAIL / REVIEW / ERROR<br/>Desktop + phone previews]
 ```
 
 The **campaign contract** is the durable source of truth: reference product, geography, season, required literal copy, prompt strategy, and provider/version metadata are saved with each run. The inspector records evidence against that contract rather than asking an evaluator for one opaque overall score.
 
-| Component | Phase A implementation | Later live-work boundary |
+| Evaluation component | Phase A implementation | Later live-work boundary |
 | --- | --- | --- |
-| Creative source | `FixtureProvider` returns labelled local assets and predictable evidence. | One approved Gemini generation per live run. |
-| Vision/OCR evidence | Fixture records flow through the same contracts and policy; optional Ollama reads only bundled fixture images. | Independent OCR plus one structured visual-evaluation call. |
+| Evidence source | `FixtureProvider` returns labelled local assets and predictable evidence. | One approved image source per live run; the specific generator is not the evaluation claim. |
+| Evidence collection | Fixture records flow through the same contracts and policy; optional Ollama reads only bundled fixture images. | Independent OCR plus one structured visual-evaluation call. |
 | Run state | SQLite transactions, event records, attempt IDs, artifact hashes, and persisted checkpoints. | Same state model, with provider request metadata and bounded retry policy. |
 | User interface | Next.js workspace, run history, download links, phone preview, and evaluation screen. | Same UI, with live-provider status surfaced honestly. |
 
@@ -183,11 +184,11 @@ The hackathon evaluation is designed before turning on a provider:
 
 This is an experimental design, not a promise of production-scale accuracy. The app will report observed timings and outcomes only after the approved runs exist.
 
-## Optional: local Ollama visual evidence
+## Optional appendix: local Ollama evidence source
 
-Ollama makes it possible to demonstrate a non-frontier, local vision-language check without consuming an API budget. ProofAd is configured for [`qwen3-vl:4b`](https://ollama.com/library/qwen3-vl), a compact vision-language model suitable for local testing. This integration is intentionally narrow: it sends a resized copy of a bundled fixture to `http://127.0.0.1:11434/api/chat`, asks the model to read the offer, and displays the returned observation as **LOCAL OLLAMA TEST / DEMO EVIDENCE**.
+Ollama makes it possible to exercise the evidence-source boundary locally without consuming an API budget. ProofAd is configured for [`qwen3-vl:4b`](https://ollama.com/library/qwen3-vl), a compact vision-language model suitable for a local smoke check. This integration is intentionally narrow: it sends a resized copy of a bundled fixture to `http://127.0.0.1:11434/api/chat`, asks the model to read the offer, and displays the returned observation as **LOCAL OLLAMA TEST / DEMO EVIDENCE**.
 
-It does **not** generate a production creative, call Gemini, change the persisted official verdict, or validate a real advertising platform. That separation prevents an optional demo aid from silently becoming a decision authority.
+It does **not** generate a production creative, call Gemini, change the persisted official verdict, or validate a real advertising platform. That separation prevents an optional demo aid from silently becoming a decision authority. Judges should evaluate the criteria, evidence provenance, policy, failure handling, and measured evaluator behavior—not the local model selection.
 
 ### Install Ollama and download the model
 
@@ -224,9 +225,9 @@ Then ask a simple question. Exit with `/bye`. If PowerShell cannot find `ollama`
 
 Model size, runtime speed, and GPU/CPU placement vary by quantization and machine. Confirm the downloaded size with `ollama list` and watch local resource use while running a smoke check. The ProofAd request restricts the local call to bundled `/fixtures/` images, resizes the input before the request, uses a short response budget, and does not upload the image to a cloud model. Do not use this optional feature with sensitive assets until you have reviewed your local device and organization policies.
 
-## Gemini Phase B: explicit approval gate
+## Phase B: evidence-source approval gate
 
-Gemini is intentionally **locked** in Phase A. Before enabling it, review a dry-run manifest that separately lists:
+Gemini is intentionally **locked** in Phase A because live evidence collection must be budgeted and measurable. Before enabling a live source, review a dry-run manifest that separately lists:
 
 | Allocation | Provider activity |
 | --- | --- |
@@ -234,7 +235,7 @@ Gemini is intentionally **locked** in Phase A. Before enabling it, review a dry-
 | One presentation run | Exactly one new live generation plus one structured visual-evaluation call. |
 | Required benchmark | Twenty real generated outputs plus the approved visual checks. |
 
-Approval must name the generator model, visual-judge model, maximum generation and judge calls, retry allowance, and available organizer/free credits. Only then should credentials be configured server-side through a local `.env` copied from `.env.example`. Never commit keys, generated assets, `data/`, `node_modules/`, or `.next/`.
+Approval must name the evidence-source models, maximum generation and judge calls, retry allowance, and available organizer/free credits. Only then should credentials be configured server-side through a local `.env` copied from `.env.example`. Never commit keys, generated assets, `data/`, `node_modules/`, or `.next/`.
 
 ## Repository map
 
@@ -260,6 +261,7 @@ Read the companion documentation for the detailed design and presentation record
 ## Submission and honesty checklist
 
 - Keep the source-code archive under 50 MB: exclude `node_modules`, `.next`, `data`, generated images, and model files.
+- Lead the pitch with the evaluation contract, human-label comparison, dependency policy, and behavioral test coverage—not the model name.
 - State whether a shown run is a fixture, a local Ollama observation, or an approved live run.
 - Record actual model IDs, call counts, observed latency, benchmark labels, and metric definitions after Phase B—not before.
 - Include the public repository URL, run instructions, pitch deck, and coding-agent disclosure.

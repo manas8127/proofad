@@ -4,7 +4,7 @@
 2. Select **Wrong discount** and show its expected-versus-observed text evidence.
 3. Open the compiled prompt to show the frozen literal campaign copy.
 4. Use the phone preview to check narrow placement readability.
-5. Click **Start Presentation Run**. Explain that it creates a new persisted Phase A fixture and makes zero provider calls.
+5. Click **Start Presentation Run**. Explain that it creates a new persisted Phase A fixture and makes zero provider calls; the purpose is to demonstrate the event trail and verdict policy, not a model.
 6. Show Product, Context, Text, and Technical findings; explain FAIL/REVIEW/ERROR are not hidden behind an aesthetic score.
 7. Open `/evaluation`; explain that human labels are blind to strategy and automated verdict.
-8. State the limitation: live Gemini quality and latency have not yet been measured.
+8. State the limitation: live evidence-source quality and latency have not yet been measured. The relevant future measurement is evaluator agreement with human labels, not a claim about a model.

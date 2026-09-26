@@ -21,11 +21,11 @@ SQLite retains run payloads, stage events, and annotations. Fixture records are 
 
 When product presence fails, other product attributes are changed to `unknown`; they cannot independently pass. Correct text cannot compensate for a wrong product or offer.
 
-## Prompts and future live architecture
+## Evaluation contract and future evidence collection
 
 Both strategies include all user requirements. Baseline is a concise complete request; structured prompt uses TASK, PRODUCT INVARIANTS, CAMPAIGN CONTEXT, EXACT COPY, COMPOSITION, and OUTPUT CONSTRAINTS. The exact compiled prompt and version are retained per run.
 
-Phase B will send the reference and frozen contract to a Gemini 3.1 image generator, save immutable returned bytes, validate the long edge before display, then run local OCR and one structured visual judge call. The judge receives reference, output, and frozen contract—but no human labels, desired verdict, or generator rationale.
+Phase B will send the reference and frozen contract to an approved image source, save immutable returned bytes, validate the long edge before display, then run local OCR and one structured visual-evidence call. The evaluator receives reference, output, and frozen contract—but no human labels, desired verdict, or generator rationale. The model selection is intentionally an implementation detail; the reusable contribution is the frozen evaluation contract, independent evidence, dependency policy, and human-calibrated measurement.
 
 ## Presentation experience
 

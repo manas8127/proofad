@@ -2,7 +2,7 @@
 
 ## Scope boundary
 
-Phase A is a local Next.js application. It proves the product flow, persistence model, verdict policy, and recovery behavior with deterministic fixtures. Optional Ollama output is shown as supplementary local demo evidence. It does not alter the official verdict.
+Phase A is a local Next.js evaluation workbench. It proves the campaign contract, evidence schema, dependency policy, human-label surface, persistence model, and recovery behavior with deterministic fixtures. Optional Ollama output is shown only as supplementary local demo evidence. It does not alter the official verdict.
 
 Gemini provider classes are deliberately locked in this phase. No live request is made until the approved Phase B call budget, model IDs, and credentials are explicitly supplied.
 
@@ -12,20 +12,22 @@ Gemini provider classes are deliberately locked in this phase. No live request i
 flowchart TD
     A[Brief: product, geography, season, literal copy] --> B[Campaign contract]
     B --> C[Idempotency key]
-    C --> D{Provider}
-    D --> E[FixtureProvider]
-    D --> F[Optional Ollama offer reader]
-    D --> G[Locked GeminiProvider]
-    E --> H[PNG artifact + immutable hashes]
-    F --> I[Local evidence label]
-    H --> J[SQLite runs, attempts, and events]
-    I --> J
-    J --> K[Product / Context / Text / Operational findings]
-    K --> L[Dependency-aware deterministic policy]
-    L --> M[PASS / FAIL / REVIEW / ERROR]
+    C --> D[Atomic criteria + dependencies]
+    D --> E{Evidence source}
+    E --> F[FixtureProvider]
+    E --> G[Optional Ollama offer reader]
+    E --> H[Locked GeminiProvider]
+    F --> I[PNG artifact + immutable hashes]
+    G --> J[Local evidence label]
+    H --> I
+    I --> K[SQLite runs, attempts, and events]
+    J --> K
+    K --> L[Product / Context / Text / Operational findings]
+    L --> M[Dependency-aware deterministic policy]
+    M --> N[PASS / FAIL / REVIEW / ERROR]
 ```
 
-The campaign contract and the saved report carry the strategy/provider metadata used for that run. Each inspection finding is independently visible; there is no hidden aggregate score that can mask a mandatory failure.
+The campaign contract and the saved report carry the strategy/evidence-source metadata used for that run. Each inspection finding is independently visible; there is no hidden aggregate score that can mask a mandatory failure. The model is an input to the evidence process, not the system’s authority.
 
 ## Event state and recovery
 
