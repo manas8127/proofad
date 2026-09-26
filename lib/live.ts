@@ -60,7 +60,7 @@ export async function generateWithGemini(brief: Brief, reference: ReferenceImage
       { type: "image", mime_type: reference.mimeType, data: reference.bytes.toString("base64") },
       { type: "text", text: compilePrompt(brief) },
     ],
-    response_format: { type: "image", mime_type: "image/png", aspect_ratio: "1:1", image_size: "1K" },
+    response_format: { type: "image", mime_type: "image/jpeg", aspect_ratio: "1:1", image_size: "1K" },
     generation_config: { thinking_level: "minimal" },
     store: false,
   });
