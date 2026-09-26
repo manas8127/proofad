@@ -4,7 +4,7 @@
 
 The project is deliberately designed as a useful product: an inspectable evaluation policy, recoverable local run state, and an interface that makes important distinctions visible. It does **not** present an attractive image or a model explanation as proof that an ad is correct.
 
-> Current status: local fixtures remain the safe default. A separate server-only live route accepts a reference image, generates a 1K creative, runs OCR plus structured visual evaluation, and persists the resulting evidence. It is disabled until an explicit budget approval and server-side key are supplied.
+> Current status: local fixtures remain the safe default. A separate server-only live route accepts a reference image, generates a 1K creative, runs OCR plus structured visual evaluation, and persists the resulting evidence. A single live inspection requires only a server-side Gemini API key. The deliberate 20-output benchmark has its own approval gate.
 
 ## Start here
 
@@ -28,6 +28,7 @@ The central operating rule is simple: **make the requirement visible, make the e
 - [Inspection and verdict policy](#inspection-and-verdict-policy)
 - [Test-run library](#test-run-library)
 - [Research basis](#research-basis)
+- [AI usage and development record](AI_USAGE.md)
 - [Trust boundaries](#trust-boundaries)
 
 ## The problem and the response
@@ -189,8 +190,8 @@ The workspace stays fixture-first while also exposing a clear **Generate & evalu
 
 1. Copy `.env.example` to `.env.local` and set `GEMINI_API_KEY`. The key is read only by the server route; it is never sent to the browser.
 2. A single inspection in the UI uses that key. Set `PROOFAD_LIVE_APPROVED=true` only before running the separate 20-output benchmark command.
-2. Start `npm run dev`.
-3. Send the brief and reference image:
+3. Start `npm run dev`.
+4. Send the brief and reference image:
 
 ```bash
 curl -X POST http://localhost:3000/api/live/inspect \

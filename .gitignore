@@ -6,5 +6,7 @@ data/
 !/.env.example
 coverage/
 *.tsbuildinfo
+tmp/
+output/
 AGENTS.md
 CLAUDE.md
