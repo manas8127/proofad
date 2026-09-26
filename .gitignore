@@ -1,7 +1,7 @@
 node_modules/
 .next/
 data/
-artifacts/
+/artifacts/
 .env*
 !/.env.example
 coverage/
