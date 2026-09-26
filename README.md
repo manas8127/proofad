@@ -6,6 +6,31 @@ The project is deliberately designed for an AI engineering hackathon: it demonst
 
 > Current status: **Phase A is fully local and fixture-backed.** The evaluation contract, evidence records, dependency policy, human-annotation surface, and behavioral cases are the work under test. Image/vision models are deliberately replaceable evidence sources; Gemini remains locked and optional Ollama can never change an official verdict.
 
+## Hackathon thesis
+
+Generative creatives fail in ways that a single aesthetic score can hide: the offer can be wrong, a product can be substituted, or evidence can be incomplete. **ProofAd’s contribution is a decision system for catching, explaining, and measuring those failures.**
+
+The central question is not *“Which model made the best image?”* It is:
+
+> **“When can an evaluator safely approve a creative, when must it reject it, and when must it admit uncertainty?”**
+
+That makes the model boundary intentionally boring and swappable. The judge-facing value is the frozen campaign contract, atomic criteria, dependency graph, independent evidence channels, deterministic gate, human calibration, and replayable audit trail.
+
+### What we will measure
+
+| Evaluation question | Measurement | Claim discipline |
+| --- | --- | --- |
+| Does the policy catch mandatory defects? | Controlled wrong-copy, wrong-product, wrong-context, missing-evidence, and oversized-artifact cases. | Fixtures prove application behavior, not model quality. |
+| Does the automated evaluator agree with people? | Blinded per-criterion human labels on held-out live outputs; report false approvals, false rejections, and review coverage. | No accuracy claim until those labels and results exist. |
+| Is a verdict explainable and reproducible? | Saved contract, evidence, hashes, events, criterion-level report, and retry path. | A report records evidence; it is not certification. |
+| Does the workflow stay safe under failure? | Duplicate-submit, refresh/recovery, corrupt artifact, failed evidence-source, and incomplete-check tests. | Local recovery is not a claim of production HA. |
+
+### Deliberate non-goals
+
+- Selecting, training, or claiming superiority of an image-generation model.
+- Treating an LLM/vision-model explanation as ground truth.
+- Replacing human review for uncertain, high-stakes, or incomplete evidence.
+
 ## What a user can do today
 
 - Open a responsive workspace at `/app`, select a campaign brief, and create a new persisted local run.
@@ -140,6 +165,18 @@ Checks are dependency-aware. For example, `product colour matches` is not allowe
 
 The policy means a polished-looking image cannot offset a wrong discount, missing required copy, or wrong product. It also makes the app’s decision explainable: users can inspect the exact failed/unknown requirement rather than infer it from a single score.
 
+### Evaluation evidence ladder
+
+ProofAd treats evidence by strength rather than flattening every signal into a confidence score:
+
+1. **Campaign contract:** the original required product, place, season, and literal copy.
+2. **Artifact evidence:** immutable image/report hashes and the saved creative being assessed.
+3. **Independent observations:** OCR for text and structured visual observations for product/context.
+4. **Policy result:** a deterministic PASS, FAIL, REVIEW, or ERROR derived from mandatory criteria and dependencies.
+5. **Human calibration:** blinded labels used to measure whether the automated process deserves trust.
+
+An uncertain observation stays uncertain. It is routed to REVIEW; it is not converted into an approval because other criteria look good.
+
 ## Test-run library
 
 All built-in cases are visibly labelled `SIMULATED / TEST FIXTURE`. They validate the product, persistence, and decision paths; they are not a benchmark of Gemini or any other model.
@@ -157,7 +194,7 @@ All built-in cases are visibly labelled `SIMULATED / TEST FIXTURE`. They validat
 | 9 | Oversized returned image (optional) | Validates input/artifact limits. |
 | 10 | Recovered interrupted run (optional) | Demonstrates restart/checkpoint recovery. |
 
-The separate Presentation Run is retained next to this library after it completes. In Phase A it is a newly persisted fixture record; in approved Phase B it will instead have an explicit allocation for exactly one new live generation and one visual-evaluation call.
+The separate Presentation Run is retained next to this library after it completes. In Phase A it is a newly persisted fixture record; in approved Phase B it will instead have an explicit allocation for exactly one new live generation and one visual-evaluation call. Its purpose is to demonstrate the evaluator’s state trail and decision—not to showcase a generator.
 
 ## Research basis
 
