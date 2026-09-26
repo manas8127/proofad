@@ -1,4 +1,4 @@
-import type { Brief } from "./types";
+import type { Brief } from "./types.ts";
 
 export const PROMPT_VERSION = "phase-a.1";
 export function compilePrompt(brief: Brief): string {

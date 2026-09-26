@@ -1,11 +1,10 @@
-import "server-only";
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { annotationSchema, briefSchema, runSchema, type Annotation, type Brief, type Run } from "./types";
-import { fixtureDefinitions, makeFixtureRun } from "./fixtures";
+import { annotationSchema, briefSchema, runSchema, type Annotation, type Brief, type Run } from "./types.ts";
+import { fixtureDefinitions, makeFixtureRun } from "./fixtures.ts";
 import { createHash, randomUUID } from "node:crypto";
-import { compilePrompt } from "./prompts";
+import { compilePrompt } from "./prompts.ts";
 
 const dataDir = join(process.cwd(), "data");
 let connection: DatabaseSync | undefined;
@@ -60,7 +59,7 @@ export function createCustomFixtureRun(input: Brief): Run {
   const existing = database().prepare("SELECT payload FROM runs WHERE idempotency_key = ?").get(key) as { payload: string } | undefined;
   if (existing) return runSchema.parse(JSON.parse(existing.payload));
   const seed = makeFixtureRun(fixtureDefinitions[0]);
-  const run: Run = { ...seed, id: `custom-${randomUUID()}`, fixtureId: "custom", name: "Custom fixture inspection", createdAt: new Date().toISOString(), brief, prompt: compilePrompt(brief), imageHash: createHash("sha256").update(`custom:${key}`).digest("hex"), note: "Local simulation created from your brief. No image model call was made." };
+  const run: Run = { ...seed, id: `custom-${randomUUID()}`, fixtureId: null, name: "Custom fixture inspection", createdAt: new Date().toISOString(), brief, prompt: compilePrompt(brief), imageHash: createHash("sha256").update(`custom:${key}`).digest("hex"), note: "Local simulation created from your brief. No image model call was made." };
   database().prepare("INSERT INTO runs (id, kind, fixture_id, idempotency_key, payload, created_at) VALUES (?, ?, ?, ?, ?, ?)")
     .run(run.id, run.kind, run.fixtureId, key, JSON.stringify(run), run.createdAt);
   record(run, "Submitted", "completed", "Custom fixture run created locally with idempotency protection.");

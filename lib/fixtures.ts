@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
-import { applyDependencies, decide } from "./policy";
-import { compilePrompt } from "./prompts";
-import type { Brief, Check, Run } from "./types";
+import { applyDependencies, decide } from "./policy.ts";
+import { compilePrompt } from "./prompts.ts";
+import type { Brief, Check, Run } from "./types.ts";
 
 const brief: Brief = {
   productName: "Northstar Sparkling Water", geography: "Bengaluru, India", season: "Monsoon",

@@ -2,11 +2,11 @@
 
 **ProofAd is an evaluation system for display-ad creative.** It turns a campaign brief into an explicit, evidence-backed decision: does the creative show the intended product, fit the required context, render the literal offer, and complete all required checks?
 
-The project is deliberately designed for an AI engineering hackathon: it demonstrates a useful product experience, an inspectable evaluation policy, and recoverable local run state. It does **not** present an attractive image or a model explanation as proof that an ad is correct.
+The project is deliberately designed as a useful product: an inspectable evaluation policy, recoverable local run state, and an interface that makes important distinctions visible. It does **not** present an attractive image or a model explanation as proof that an ad is correct.
 
 > Current status: **Phase A is fully local and fixture-backed.** The evaluation contract, evidence records, dependency policy, human-annotation surface, and behavioral cases are the work under test. Image/vision models are deliberately replaceable evidence sources; Gemini remains locked and optional Ollama can never change an official verdict.
 
-## Hackathon thesis
+## The problem and the response
 
 Generative creatives fail in ways that a single aesthetic score can hide: the offer can be wrong, a product can be substituted, or evidence can be incomplete. **ProofAd’s contribution is a decision system for catching, explaining, and measuring those failures.**
 
@@ -76,6 +76,26 @@ Open one of these local routes:
 
 The first local interaction creates `data/proofad.sqlite`. This SQLite database is the local run/event store and is intentionally ignored by Git. Delete it only when you deliberately want to reset local application history; it is not required to run the seeded test library.
 
+### Use the evaluation pipeline without a browser
+
+The workspace is optional. The same persisted evaluation pipeline is available through REST and MCP:
+
+| Interface | Entry point | Use it when |
+| --- | --- | --- |
+| REST | `POST /api/pipeline/inspect` | A script, service, or CI task needs an evaluation record. |
+| REST | `GET /api/pipeline/runs` | Another tool needs saved records and verdict summaries. |
+| MCP | `http://localhost:3000/api/mcp` | An MCP client or agent needs tools for inspection, runs, and metrics. |
+
+Start the server with `npm run dev`, then send a campaign brief to the REST endpoint:
+
+```bash
+curl -X POST http://localhost:3000/api/pipeline/inspect \
+  -H "content-type: application/json" \
+  -d '{"productName":"Northstar Sparkling Water","geography":"Bengaluru, India","season":"Monsoon","requiredCopy":"20% OFF THIS WEEKEND","strategy":"structured"}'
+```
+
+This returns the same frozen contract, checks, evidence, verdict, and report-ready run record the workspace uses. A repeated identical request reopens the existing local run. See [docs/pipeline.md](docs/pipeline.md) for all REST endpoints and MCP tools.
+
 ### Verify the implementation
 
 Run these checks before a demo, commit, or submission:
@@ -141,26 +161,19 @@ flowchart LR
 
 The **campaign contract** is the durable source of truth: reference product, geography, season, required literal copy, prompt strategy, and provider/version metadata are saved with each run. The inspector records evidence against that contract rather than asking an evaluator for one opaque overall score. The model is deliberately outside the decision authority: it can contribute an observation, but only the evidence policy can create a verdict.
 
-### User and judge flow
+### User and evaluation flow
 
 ```mermaid
-sequenceDiagram
-    actor User
-    participant App as ProofAd workspace
-    participant Store as SQLite event log
-    participant Eval as Evidence + policy
-    participant Human as Blinded annotator
-
-    User->>App: Enter campaign brief
-    App->>Store: Save frozen contract + idempotency key
-    App->>Eval: Collect criterion-level evidence
-    Eval->>Store: Save artifact, findings, hashes, timings
-    Eval->>App: PASS / FAIL / REVIEW / ERROR with reasons
-    App->>User: Desktop report + phone-size preview
-    User->>App: Export report or retry verification
-    App->>Store: Preserve event trail; never overwrite evidence
-    Human->>App: Label product/context/text blind to automated verdict
-    App->>Eval: Compare human labels with automated findings
+flowchart TD
+    User[User enters campaign brief] --> Contract[Save frozen contract<br/>and idempotency key]
+    Contract --> Inspect[Collect criterion-level evidence]
+    Inspect --> Record[Save artifact, findings,<br/>hashes, and timings]
+    Record --> Decision[Apply dependency-aware policy]
+    Decision --> Report[Show verdict and reasons<br/>with a phone preview]
+    Report --> Retry[Export report or retry verification]
+    Retry --> Trail[Preserve event trail<br/>without overwriting evidence]
+    Human[Blinded human annotation] --> Compare[Compare human labels<br/>with automated findings]
+    Decision --> Compare
 ```
 
 The demo follows this exact flow. A presentation run is new and persisted, a fixture is visibly labelled, and the report makes it possible to explain *why* a case passed, failed, or needs review.
@@ -194,7 +207,7 @@ Each run moves through explicit checkpoints:
 Submitted -> BriefReady -> ImageSaved -> ChecksCompleted -> Completed
 ```
 
-An event records the run ID, attempt ID, stage, status, timestamp, and relevant artifact references. This is deliberately simpler than a message broker but enough for a hackathon prototype to demonstrate useful recovery behavior:
+An event records the run ID, attempt ID, stage, status, timestamp, and relevant artifact references. This is deliberately simpler than a message broker but enough for a focused local prototype to demonstrate useful recovery behavior:
 
 - Duplicate click or browser refresh: reopen the existing idempotent run rather than create another generation.
 - OCR or evaluation failure: preserve the already-saved image and retry the failed verification step only.
@@ -272,7 +285,7 @@ In practice, the combined approach is: **ask inspectable questions (TIFA), make 
 
 ### Evaluation plan for the live phase
 
-The hackathon evaluation is designed before turning on a provider:
+The live evaluation is designed before turning on a provider:
 
 - Generate roughly 20 real outputs during the official hacking window: two products, five briefs per product, and baseline versus structured prompts.
 - Keep eight examples for development and twelve held out, splitting by whole brief to avoid training on one version and testing a near-duplicate.
@@ -370,19 +383,18 @@ Read the companion documentation for the detailed design and presentation record
 
 - [docs/architecture.md](docs/architecture.md) — inference/event architecture and future production boundary.
 - [docs/design.md](docs/design.md) — desktop flow, narrow preview, interaction states, and demo narrative.
+- [docs/pipeline.md](docs/pipeline.md) — browser-independent REST pipeline and MCP tools.
 - [docs/research.md](docs/research.md) — research mapping and evaluation methodology.
 - [docs/demo.md](docs/demo.md) — concise demo sequence and claims to avoid.
 - [docs/agent-use.md](docs/agent-use.md) — coding-agent transparency and the human directions supplied to the agent.
 - [docs/decisions.md](docs/decisions.md) — scoped technical decisions, including why Kubernetes and SquashFS are not build priorities.
 
-## Submission and honesty checklist
+## Trust boundaries
 
-- Keep the source-code archive under 50 MB: exclude `node_modules`, `.next`, `data`, generated images, and model files.
-- Lead the pitch with the evaluation contract, human-label comparison, dependency policy, and behavioral test coverage—not the model name.
-- State whether a shown run is a fixture, a local Ollama observation, or an approved live run.
-- Record actual model IDs, call counts, observed latency, benchmark labels, and metric definitions after Phase B—not before.
-- Include the public repository URL, run instructions, pitch deck, and coding-agent disclosure.
-- Do not claim production high availability, exactly-once remote execution, advertising-platform compatibility, legal/cultural certification, conversion lift, or evaluator accuracy that has not been measured.
+- A result always says whether it came from a local fixture, a local observation, or an approved live source.
+- A model observation is evidence, not authority. The saved contract and deterministic policy produce the verdict.
+- REVIEW and ERROR remain visible states. The system does not turn incomplete or uncertain evidence into approval.
+- Measured results are reported with their sample, labels, model/source version, and observed timings. Unmeasured claims are left out.
 
 ## License
 

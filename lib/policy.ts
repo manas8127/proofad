@@ -1,4 +1,4 @@
-import type { Check } from "./types";
+import type { Check } from "./types.ts";
 
 /** A failed product-presence check makes attribute-level product passes meaningless. */
 export function applyDependencies(checks: Check[]): Check[] {
