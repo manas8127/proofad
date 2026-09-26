@@ -165,6 +165,20 @@ sequenceDiagram
 
 The demo follows this exact flow. A presentation run is new and persisted, a fixture is visibly labelled, and the report makes it possible to explain *why* a case passed, failed, or needs review.
 
+### Reviewer’s 90-second checklist
+
+Use this sequence when reviewing the live app or this repository:
+
+| Time | Open | Verify |
+| --- | --- | --- |
+| 0–20 seconds | `/demo` → **Wrong discount/copy** | A visually plausible creative still fails when its literal offer conflicts with the frozen contract. |
+| 20–40 seconds | The finding cards and report | Every decision has a criterion, observation, evidence, status, and immutable artifact/report reference. |
+| 40–55 seconds | **Presentation Run** | It creates a new, labelled local run with stage timing; it is not a replayed live-model claim. |
+| 55–75 seconds | `/evaluation` | Human labels are collected independently of prompt strategy and automated verdict. |
+| 75–90 seconds | Test library + diagrams | Failure, review, error, dependency, recovery, and calibration behavior are defined before live results are claimed. |
+
+The strongest question to ask is: **“What evidence would make this verdict change?”** ProofAd exposes that answer per criterion and preserves it in the run history.
+
 | Evaluation component | Phase A implementation | Later live-work boundary |
 | --- | --- | --- |
 | Evidence source | `FixtureProvider` returns labelled local assets and predictable evidence. | One approved image source per live run; the specific generator is not the evaluation claim. |
