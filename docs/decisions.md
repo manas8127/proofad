@@ -1,6 +1,6 @@
 # Decisions
 
-- **Next.js + TypeScript:** chosen for stable routing, responsive behaviour, and a genuine same-origin phone preview.
+- **Next.js + TypeScript:** chosen for stable routing and a focused browser evaluation workspace.
 - **SQLite through Node's built-in `node:sqlite`:** avoids an additional native database dependency while preserving durable local events.
 - **No Kubernetes, queues, Redis, vector store, authentication, or cloud deployment:** unsuitable for a seven-hour individual prototype; production architecture remains future work.
 - **No SquashFS:** it is read-only and does not improve this writable local workflow or remote-model reliability.

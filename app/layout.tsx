@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ProofAd | creative inspection",
-  description: "Generate, inspect, and explain campaign creative decisions.",
+  title: "ProofAd | creative evaluation",
+  description: "Run clear, evidence-backed evaluations for campaign creative.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

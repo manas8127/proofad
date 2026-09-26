@@ -1,10 +1,10 @@
-# Demo script
+# Simple evaluation walkthrough
 
-1. Open `/demo`: “An attractive ad can still violate the brief.”
-2. Select **Wrong discount** and show its expected-versus-observed text evidence.
-3. Open the compiled prompt to show the frozen literal campaign copy.
-4. Use the phone preview to check narrow placement readability.
-5. Click **Start Presentation Run**. Explain that it creates a new persisted Phase A fixture and makes zero provider calls; the purpose is to demonstrate the event trail and verdict policy, not a model.
-6. Show Product, Context, Text, and Technical findings; explain FAIL/REVIEW/ERROR are not hidden behind an aesthetic score.
-7. Open `/evaluation`; explain that human labels are blind to strategy and automated verdict.
-8. State the limitation: live evidence-source quality and latency have not yet been measured. The relevant future measurement is evaluator agreement with human labels, not a claim about a model.
+1. Open /app.
+2. Enter a campaign brief and select Run evaluation.
+3. Read the result in this order: verdict, required campaign fields, criterion findings, then evidence.
+4. Open Saved test runs and select Wrong discount to show that literal-copy failure is not hidden by an otherwise plausible creative.
+5. Download the report or choose Retry verification to show that the stored artifact can be checked again without creating another artifact.
+6. Open /evaluation and record an independent label for a saved run.
+
+The demonstration is intentionally quiet: one form, one result, and a history that stays closed until it is useful.

@@ -1,12 +1,59 @@
 "use client";
-import { FormEvent, useEffect, useState } from "react";
+
+import { useEffect, useState, type FormEvent } from "react";
 import type { Run } from "@/lib/types";
 
 type Metrics = { fixtureRuns: number; annotations: number; automatedVerdicts: Record<string, number> };
+
 export default function EvaluationPage() {
-  const [runs, setRuns] = useState<Run[]>([]); const [selected, setSelected] = useState(""); const [metrics, setMetrics] = useState<Metrics | null>(null); const [saved, setSaved] = useState(false);
-  const load = () => { fetch("/api/runs").then((r) => r.json()).then((d) => { const items = d.runs.filter((x: Run) => x.kind === "fixture"); setRuns(items); setSelected((old) => old || items[0]?.id); }); fetch("/api/metrics").then((r) => r.json()).then(setMetrics); };
-  useEffect(load, []);
-  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const form = new FormData(event.currentTarget); await fetch("/api/annotations", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ runId: selected, annotator: form.get("annotator"), product: form.get("product"), context: form.get("context"), text: form.get("text") }) }); setSaved(true); load(); }
-  return <main className="shell"><header className="nav"><a href="/demo" className="brand">Proof<span>Ad</span></a><nav><a href="/app">App</a><a href="/demo">Demo</a><a aria-current="page" href="/evaluation">Evaluation</a></nav></header><section className="hero compact"><p className="eyebrow">BLINDED ANNOTATION</p><h1>Measure the evaluator; do not mistake it for ground truth.</h1><p>Annotators see the reference requirements and generated creative, but not prompt strategy or automated verdict.</p></section><section className="evaluation-grid"><form onSubmit={submit} className="annotate"><h2>Record a human label</h2><label>Fixture / saved run<select value={selected} onChange={(e) => setSelected(e.target.value)}>{runs.map((run) => <option value={run.id} key={run.id}>{run.name}</option>)}</select></label><label>Annotator<input name="annotator" required placeholder="Your name or initials" /></label>{["product", "context", "text"].map((key) => <label key={key}>{key[0].toUpperCase() + key.slice(1)}<select name={key} defaultValue="uncertain"><option value="pass">Pass</option><option value="fail">Fail</option><option value="uncertain">Uncertain</option></select></label>)}<button>Save human label</button>{saved && <p className="success">Saved. Automated predictions remain separate from this form.</p>}</form><aside className="metrics"><h2>Current local evidence</h2>{metrics && <><p><strong>{metrics.fixtureRuns}</strong> fixture runs · <strong>{metrics.annotations}</strong> human labels</p><div className="metric-row">{Object.entries(metrics.automatedVerdicts).map(([key, value]) => <span key={key}><b>{value}</b> {key}</span>)}</div></>}<p className="muted">Fixture results test integration only. Confusion matrices and paired baseline-versus-structured outcomes are generated only from approved live outputs and human labels.</p></aside></section></main>;
+  const [runs, setRuns] = useState<Run[]>([]);
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  function refresh() {
+    fetch("/api/runs").then((response) => response.json()).then((data) => setRuns(data.runs ?? []));
+    fetch("/api/metrics").then((response) => response.json()).then(setMetrics);
+  }
+
+  useEffect(() => { refresh(); }, []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const response = await fetch("/api/annotations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        runId: form.get("runId"),
+        annotator: form.get("annotator"),
+        product: form.get("product"),
+        context: form.get("context"),
+        text: form.get("text"),
+      }),
+    });
+    if (response.ok) {
+      setSaved(true);
+      refresh();
+      event.currentTarget.reset();
+    }
+  }
+
+  return <main className="shell">
+    <header className="nav"><a href="/app" className="brand">Proof<span>Ad</span></a><nav aria-label="Primary navigation"><a href="/app">Run evaluation</a></nav></header>
+    <section className="intro"><p className="eyebrow">HUMAN CALIBRATION</p><h1>Compare the evaluator with people.</h1><p>Record an independent label for a saved run. The form does not show the automated verdict while you decide.</p></section>
+    <section className="evaluation-grid">
+      <form onSubmit={submit} className="annotate">
+        <h2>Record a label</h2>
+        <label>Saved run<select name="runId" required>{runs.map((run) => <option value={run.id} key={run.id}>{run.name}</option>)}</select></label>
+        <label>Your name or initials<input name="annotator" required /></label>
+        {["product", "context", "text"].map((key) => <label key={key}>{key[0].toUpperCase() + key.slice(1)}<select name={key} defaultValue="uncertain"><option value="pass">Pass</option><option value="fail">Fail</option><option value="uncertain">Uncertain</option></select></label>)}
+        <button>Save label</button>
+        {saved && <p className="success">Saved. The summary has been updated.</p>}
+      </form>
+      <aside className="metrics">
+        <h2>Current sample</h2>
+        {metrics && <><p className="muted">{metrics.fixtureRuns} fixture runs · {metrics.annotations} human labels</p><div className="metric-row">{Object.entries(metrics.automatedVerdicts).map(([key, value]) => <span key={key}><b>{value}</b>{key}</span>)}</div></>}
+      </aside>
+    </section>
+  </main>;
 }

@@ -12,7 +12,7 @@ ProofAd is intentionally small in surface area and strict in behavior:
 
 | If you need to… | Start here | What you get |
 | --- | --- | --- |
-| See the product in action | [http://localhost:3000/demo](http://localhost:3000/demo) | A guided failure case, a narrow preview, and a fresh local run. |
+| Run an evaluation | [http://localhost:3000/app](http://localhost:3000/app) | One brief form, a clear verdict, and its evidence. |
 | Evaluate a brief in a browser | [http://localhost:3000/app](http://localhost:3000/app) | A frozen contract, visible findings, retry, export, and run history. |
 | Label and measure results | [http://localhost:3000/evaluation](http://localhost:3000/evaluation) | Human annotation kept separate from automated findings. |
 | Call it from software | [Pipeline and MCP](#use-the-evaluation-pipeline-without-a-browser) | JSON endpoints and MCP tools using the same persisted decision path. |
@@ -59,8 +59,7 @@ That makes the model boundary intentionally boring and swappable. The judge-faci
 
 - Open a responsive workspace at `/app`, select a campaign brief, and create a new persisted local run.
 - Inspect ten deterministic cases: eight core evaluation cases and two optional operational cases.
-- Use `/demo` to present a saved discrepancy first, then create a distinct, visibly local `Presentation Run` with real stage timing.
-- See the same ad at desktop size and inside a phone-shaped, approximately 390 px placement preview.
+- Run a local evaluation from one brief form and inspect the resulting verdict and evidence.
 - Read separated Product, Context, Text, and Operational evidence before accepting the final verdict.
 - Download the immutable report and creative artifact, retry verification without creating another generation, and recover saved runs after a refresh or restart.
 - Use `/evaluation` to collect blinded human annotations and view the resulting measurement surface.
@@ -94,8 +93,7 @@ Open one of these local routes:
 
 | Route | Use it for |
 | --- | --- |
-| [http://localhost:3000/demo](http://localhost:3000/demo) | The guided demonstration: test-run picker, presentation run, and phone preview. |
-| [http://localhost:3000/app](http://localhost:3000/app) | The responsive product workspace, run history, exports, retry verification, and optional local Ollama check. |
+| [http://localhost:3000/app](http://localhost:3000/app) | The evaluation workspace, run history, exports, and retry verification. |
 | [http://localhost:3000/evaluation](http://localhost:3000/evaluation) | Blinded human annotation and evaluation metrics. |
 
 The first local interaction creates `data/proofad.sqlite`. This SQLite database is the local run/event store and is intentionally ignored by Git. Delete it only when you deliberately want to reset local application history; it is not required to run the seeded test library.
@@ -187,11 +185,11 @@ npm run build
 
 ## A 60-second demonstration
 
-1. Start at `/demo` and choose **Wrong discount/copy**. It is intentionally attractive but contains evidence that the required offer differs from the observed offer.
-2. Show the supplied brief and retained prompt strategy, then open the phone preview. The phone frame is a presentation aid for narrow-screen legibility, not a claim of native mobile-app or advertising-platform compatibility.
-3. Reveal the individual Product, Context, and Text findings. The mandatory text mismatch drives `FAIL`; a high aesthetic impression cannot compensate for it.
-4. Click **Presentation Run**. Phase A creates a new `PRESENTATION RUN / LOCAL SIMULATION` record and displays stage status and elapsed time. It never pretends a stored fixture is a live model call.
-5. Finish on `/evaluation`: explain that the system is evaluated against human labels, controlled behavioral failures, and held-out real outputs—not by which model generated the image.
+1. Start at `/app`, enter a brief, and select **Run evaluation**.
+2. Read the verdict, campaign requirements, and criterion-level evidence in one result panel.
+3. Open **Saved test runs** and select **Wrong discount** to see a mandatory copy failure.
+4. Download the report or retry verification without creating another artifact.
+5. Open `/evaluation` to record an independent human label.
 
 ## Architecture
 
@@ -246,7 +244,7 @@ flowchart TD
     Contract --> Inspect[Collect criterion-level evidence]
     Inspect --> Record[Save artifact, findings,<br/>hashes, and timings]
     Record --> Decision[Apply dependency-aware policy]
-    Decision --> Report[Show verdict and reasons<br/>with a phone preview]
+    Decision --> Report[Show verdict and reasons<br/>in one result panel]
     Report --> Retry[Export report or retry verification]
     Retry --> Trail[Preserve event trail<br/>without overwriting evidence]
     Human[Blinded human annotation] --> Compare[Compare human labels<br/>with automated findings]
@@ -261,11 +259,11 @@ Use this sequence when reviewing the live app or this repository:
 
 | Time | Open | Verify |
 | --- | --- | --- |
-| 0–20 seconds | `/demo` → **Wrong discount/copy** | A visually plausible creative still fails when its literal offer conflicts with the frozen contract. |
-| 20–40 seconds | The finding cards and report | Every decision has a criterion, observation, evidence, status, and immutable artifact/report reference. |
-| 40–55 seconds | **Presentation Run** | It creates a new, labelled local run with stage timing; it is not a replayed live-model claim. |
-| 55–75 seconds | `/evaluation` | Human labels are collected independently of prompt strategy and automated verdict. |
-| 75–90 seconds | Test library + diagrams | Failure, review, error, dependency, recovery, and calibration behavior are defined before live results are claimed. |
+| 0–20 seconds | `/app` → **Run evaluation** | A brief becomes one visible result. |
+| 20–40 seconds | The result panel | Every decision has a requirement, observation, evidence, and status. |
+| 40–55 seconds | **Saved test runs** → **Wrong discount** | A visually plausible creative still fails when literal copy conflicts with the brief. |
+| 55–75 seconds | `/evaluation` | Human labels are collected independently of automated findings. |
+| 75–90 seconds | Report and diagrams | Failure, review, error, dependency, recovery, and calibration behavior are defined before live results are claimed. |
 
 The strongest question to ask is: **“What evidence would make this verdict change?”** ProofAd exposes that answer per criterion and preserves it in the run history.
 
@@ -274,7 +272,7 @@ The strongest question to ask is: **“What evidence would make this verdict cha
 | Evidence source | `FixtureProvider` returns labelled local assets and predictable evidence. | One approved image source per live run; the specific generator is not the evaluation claim. |
 | Evidence collection | Fixture records flow through the same contracts and policy; optional Ollama reads only bundled fixture images. | Independent OCR plus one structured visual-evaluation call. |
 | Run state | SQLite transactions, event records, attempt IDs, artifact hashes, and persisted checkpoints. | Same state model, with provider request metadata and bounded retry policy. |
-| User interface | Next.js workspace, run history, download links, phone preview, and evaluation screen. | Same UI, with live-provider status surfaced honestly. |
+| User interface | One Next.js workspace, run history, download links, and evaluation screen. | Same UI, with live-provider status surfaced honestly. |
 
 ### Recoverability and honest failure handling
 
@@ -431,7 +429,7 @@ It does **not** generate a production creative, call Gemini, change the persiste
    ollama serve
    ```
 
-4. Start ProofAd with `npm run dev`, open `/app` or `/demo`, select a fixture, and choose **Run local Ollama text check**. The app retains both the official fixture result and the local observation so they cannot be confused.
+4. Start ProofAd with `npm run dev` and use the local endpoint only when a development smoke check is needed. The official result and local observation remain separate.
 
 For a direct model sanity check outside the app:
 

@@ -12,7 +12,6 @@ ProofAd records limits plainly. A limitation is not a hidden defect or a marketi
 | Exact product identity is not yet measured | Product presence and product fidelity are harder than generic scene relevance. | Reference-versus-output identity protocol, labels, and measured errors. |
 | Local SQLite is not a concurrent production store | It supports a recoverable local workflow but not multi-instance coordination or durable worker delivery. | Durable queue, object storage, managed database, leases, dead-letter handling, and recovery tests. |
 | REST and MCP endpoints are local and unauthenticated | A localhost integration is useful for development but must not be exposed broadly without access control. | Authentication, authorization scope, rate limits, audit controls, and deployment configuration. |
-| The phone preview is representative, not platform certification | A narrow preview helps inspect readability but does not validate every device, placement, or advertising platform. | Defined target-device matrix and separate platform validation where required. |
 
 ## What is intentionally not claimed
 

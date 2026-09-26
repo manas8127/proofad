@@ -40,6 +40,6 @@ Both strategies include all user requirements. Baseline is a concise complete re
 
 Phase B will send the reference and frozen contract to an approved image source, save immutable returned bytes, validate the long edge before display, then run local OCR and one structured visual-evidence call. The evaluator receives reference, output, and frozen contract—but no human labels, desired verdict, or generator rationale. The model selection is intentionally an implementation detail; the reusable contribution is the frozen evaluation contract, independent evidence, dependency policy, and human-calibrated measurement.
 
-## Presentation experience
+## Interaction experience
 
-`/demo` uses a restrained CSS phone shell containing the same-origin `/app` route at roughly 390×780 CSS pixels. It is a readable placement preview, not a native-app or ad-platform compatibility claim. Actual narrow-screen users access `/app` directly.
+`/app` is the single primary workspace. It presents one campaign brief form, one clear action, one result panel, and a collapsed saved-run history. The result keeps the campaign requirements, verdict, and criterion-level evidence together. `/demo` redirects to `/app` so there is no duplicate workflow or competing placement.

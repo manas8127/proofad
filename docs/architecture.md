@@ -2,7 +2,7 @@
 
 ## Scope boundary
 
-Phase A is a local Next.js evaluation workbench. It proves the campaign contract, evidence schema, dependency policy, human-label surface, persistence model, and recovery behavior with deterministic fixtures. Optional Ollama output is shown only as supplementary local demo evidence. It does not alter the official verdict.
+Phase A is a local Next.js evaluation workbench. It proves the campaign contract, evidence schema, dependency policy, human-label surface, persistence model, and recovery behavior with deterministic fixtures. Optional Ollama output is supplementary local evidence only. It does not alter the official verdict.
 
 Gemini provider classes are deliberately locked in this phase. No live request is made until the approved Phase B call budget, model IDs, and credentials are explicitly supplied.
 
